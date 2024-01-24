@@ -3,9 +3,6 @@ if (window.mafiaCoverScriptInjected !== true) {
     
     var VIDEO_RATIO = 1.7793
     
-    let addCSS = css => document.head.appendChild(document.createElement("style")).innerHTML=css
-    addCSS('.style-imafia-num { color: white; position:absolute; text-align: center; font-size: 24px; font-weight: 500}')
-    
     var imafiaCover
     var video = document.getElementsByClassName("html5-main-video")[0]
     var container = document.querySelector('.html5-video-player')
@@ -13,96 +10,104 @@ if (window.mafiaCoverScriptInjected !== true) {
     initVideoAnalyser()
     
     window.layoutOrder = 0
+    initCoverVars()
 }
 
 if(window.mafiaCoverScriptEnabled !== true) {
     window.mafiaCoverScriptEnabled = true
     
     buildCoverDiv()
-    setLayout()
+    buildSettingsDiv()
+    updateCoverSize()
     
     var videoAnalyser = window.videoSilenceAnalyser;
     checkIfSilent()
 } else {
     window.mafiaCoverScriptEnabled = false
+    
     var prevCover = document.getElementById('imafia-cover')
     if(prevCover != null) {
-      container.removeChild(prevCover)
+        container.removeChild(prevCover)
+    }
+    
+    var prevSettings = document.getElementById('mafia-settings')
+    if(prevSettings != null) {
+        container.removeChild(prevSettings)
     }
 }
 
 function buildCoverDiv() {
-    coverBgColor = "#520000"
-
+    coverBgColor = "black"
+    
     imafiaCover = document.createElement('div')
     imafiaCover.id = "imafia-cover"
-    imafiaCover.setAttribute("style", `background: ${coverBgColor}; position: absolute; z-index: 58`)
-
+    imafiaCover.setAttribute("style", `background: ${coverBgColor}; border-radius: 6px; position: absolute; z-index: 58`)
+    
     var prevCover = document.getElementById('imafia-cover')
     if(prevCover != null) {
-      container.removeChild(prevCover)
+        container.removeChild(prevCover)
     }
     container.appendChild(imafiaCover)
     
     const resizeObserver = new ResizeObserver(updateCoverSize)
     resizeObserver.observe(container)
-
-    let nextLayoutButton = document.createElement('div')
-    nextLayoutButton.id = "imafia-cover-next-layout"
-    nextLayoutButton.innerHTML = ">>"
-    nextLayoutButton.style.right = 0
-    nextLayoutButton.style.top = 0
-    nextLayoutButton.style.position = "absolute";
-    nextLayoutButton.style.cursor = "pointer";
-    nextLayoutButton.style.fontSize = "20px";
-    imafiaCover.appendChild(nextLayoutButton)
-
-    nextLayoutButton.addEventListener('click', function() {
-        window.layoutOrder = (window.layoutOrder + 1) % 3
-        setLayout()
-    });
     
+    let settingsImg = document.createElement('img')
+    settingsImg.id = "imafia-cover-settings-btn"
+    settingsImg.src = chrome.runtime.getURL("images/settings.png");
+    settingsImg.style.right = "-4px";
+    settingsImg.style.top = "-4px";
+    settingsImg.style.position = "absolute";
+    settingsImg.style.cursor = "pointer";
+    settingsImg.style.width = "12px";
+    settingsImg.style.height = "12px";
+    settingsImg.style.padding = "10px";
+    imafiaCover.appendChild(settingsImg)
+
+    settingsImg.addEventListener('click', function() {
+        document.getElementById("mafia-settings").style.visibility = "visible";
+    });
 }
 
 function updateCoverSize() {
-  var containerRatio = container.clientWidth / container.clientHeight
-  if(containerRatio < VIDEO_RATIO) {
-    var videoWidth = container.clientWidth
-    var videoHeight = videoWidth / VIDEO_RATIO
-  } else {
-    var videoHeight = container.clientHeight
-    var videoWidth = videoHeight * VIDEO_RATIO
-  }
-
-  var coverHeight = videoHeight * coverHeightPart
-  var coverBottom = (container.clientHeight - videoHeight) / 2 + videoHeight * coverBottomSpacePart
-  var coverWidth = videoWidth*coverWidthPart
-  var coverLeft = (container.clientWidth - videoWidth) / 2 + videoWidth * ((1 - coverWidthPart) / 2)
-  imafiaCover.style.bottom = `${Math.round(coverBottom)}px`
-  imafiaCover.style.height = `${Math.round(coverHeight)}px`
-  imafiaCover.style.width = `${Math.round(coverWidth)}px`
-  imafiaCover.style.left = `${Math.round(coverLeft)}px`
-    
-  document.querySelectorAll(".style-imafia-num").forEach(el => el.remove());
-  initialSpace = (100.0 - playerWidth*10 - playersSpace*9)/2
-  for (let i = 1; i <= 10; i++) {
-      
-    playerNumDiv = document.createElement('div')
-    playerNumDiv.innerHTML = i
-    playerNumDiv.className = "style-imafia-num"
-    playerNumDiv.style.width = `${playerWidth}%`
-    playerNumDiv.style.left = `${initialSpace + (playerWidth + playersSpace) * (i - 1)}%`
-    playerNumDiv.style.pointerEvents = "none";
-    if(numberOnBottom) {
-        playerNumDiv.style.bottom = "0px"
-        playerNumDiv.style.top = ""
+    var containerRatio = container.clientWidth / container.clientHeight
+    if(containerRatio < VIDEO_RATIO) {
+        var videoWidth = container.clientWidth
+        var videoHeight = videoWidth / VIDEO_RATIO
     } else {
-        playerNumDiv.style.bottom = ""
-        playerNumDiv.style.top = "0px"
+        var videoHeight = container.clientHeight
+        var videoWidth = videoHeight * VIDEO_RATIO
     }
+    
+    var coverHeight = videoHeight * coverHeightPart
+    var coverBottom = (container.clientHeight - videoHeight) / 2 + videoHeight * coverBottomSpacePart
+    var coverWidth = videoWidth*coverWidthPart
+    var coverLeft = (container.clientWidth - videoWidth) / 2 + videoWidth * ((1 - coverWidthPart) / 2)
+    imafiaCover.style.bottom = `${Math.round(coverBottom)}px`
+    imafiaCover.style.height = `${Math.round(coverHeight)}px`
+    imafiaCover.style.width = `${Math.round(coverWidth)}px`
+    imafiaCover.style.left = `${Math.round(coverLeft)}px`
+    
+    document.querySelectorAll(".style-imafia-num").forEach(el => el.remove());
+    initialSpace = (100.0 - playerWidth*10 - playersSpace*9)/2
+    
+    for (let i = 1; i <= 10; i++) {
+        playerNumDiv = document.createElement('div')
+        playerNumDiv.innerHTML = i
+        playerNumDiv.className = "style-imafia-num"
+        playerNumDiv.style.width = `${playerWidth}%`
+        playerNumDiv.style.left = `${initialSpace + (playerWidth + playersSpace) * (i - 1)}%`
+        playerNumDiv.style.pointerEvents = "none";
+        if(numberOnBottom) {
+            playerNumDiv.style.bottom = "0px"
+            playerNumDiv.style.top = ""
+        } else {
+            playerNumDiv.style.bottom = ""
+            playerNumDiv.style.top = "0px"
+        }
         
-    imafiaCover.appendChild(playerNumDiv)
-  }
+        imafiaCover.appendChild(playerNumDiv)
+    }
 }
 
 
@@ -124,72 +129,192 @@ var silenceCounter = 0
 var prevVideoTime = 0
 
 function checkIfSilent() {
-  if(window.mafiaCoverScriptEnabled !== true) {
-    video.style.webkitFilter = ""
-    return
-  }
+    if(window.mafiaCoverScriptEnabled !== true) {
+        video.style.webkitFilter = ""
+        return
+    }
     
-  if(!isVideoPlaying(video)) {
+    if(!isVideoPlaying(video)) {
+        setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
+        video.style.webkitFilter = "blur(30px)"
+        return
+    }
+    
+    var array = new Uint8Array(videoAnalyser.fftSize);
+    videoAnalyser.getByteTimeDomainData(array);
+    
+    var average = 0.0;
+    for (i = 0; i < array.length; i++) {
+        a = Math.abs(array[i] - 128);
+        average += a;
+    }
+    average /= array.length;
+    
+    if(Math.abs(video.currentTime - prevVideoTime) > SILENCE_CHECK_PERIOD * 2) {
+        silenceCountTillHide = 1
+    }
+    prevVideoTime = video.currentTime
+    
+    if(average < 0.1) {
+        silenceCounter++
+    } else {
+        silenceCountTillHide = SILENCE_TILL_BLUR / SILENCE_CHECK_PERIOD
+        video.style.webkitFilter = ""
+        silenceCounter = 0
+    }
+    
+    if(silenceCounter == silenceCountTillHide) {
+        video.style.webkitFilter = "blur(50px)"
+    }
+    
     setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
-    video.style.webkitFilter = "blur(30px)"
-    return
-  }
-
-  var array = new Uint8Array(videoAnalyser.fftSize);
-  videoAnalyser.getByteTimeDomainData(array);
-
-  var average = 0.0;
-  for (i = 0; i < array.length; i++) {
-    a = Math.abs(array[i] - 128);
-    average += a;
-  }
-  average /= array.length;
-
-  if(Math.abs(video.currentTime - prevVideoTime) > SILENCE_CHECK_PERIOD * 2) {
-    silenceCountTillHide = 1
-  }
-  prevVideoTime = video.currentTime
-
-  if(average < 0.1) {
-    silenceCounter++
-  } else {
-    silenceCountTillHide = SILENCE_TILL_BLUR / SILENCE_CHECK_PERIOD
-    video.style.webkitFilter = ""
-    silenceCounter = 0
-  }
-
-  if(silenceCounter == silenceCountTillHide) {
-    video.style.webkitFilter = "blur(50px)"
-  } 
-  
-  setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
 }
 
-function setLayout() {
-    if(window.layoutOrder == 0) {
-        //Imafia #1 example: https://www.youtube.com/watch?v=ZUbJmJhLQI4
-        playerWidth = 8.4
-        playersSpace = 1.5
-        coverHeightPart = 0.1192
-        coverWidthPart = 0.630
-        coverBottomSpacePart = 0.080
-        numberOnBottom = true
-    } else if(window.layoutOrder == 1) {
-        //Imafia #2  example: https://www.youtube.com/watch?v=faZl-AorxZo
-        playerWidth = 8.3
-        playersSpace = 1.7
-        coverHeightPart = 0.08
-        coverWidthPart = 0.940
-        coverBottomSpacePart = 0.170
-        numberOnBottom = true
-    } else if(window.layoutOrder == 2) {
-        //Imafia #3 example: https://www.youtube.com/watch?v=LwZGiLQ3q4Y
-        playerWidth = 9.1
-        playersSpace = 0.95
-        coverHeightPart = 0.134
-        coverWidthPart = 0.620
-        coverBottomSpacePart = 0.014
-        numberOnBottom = false
+
+function initCoverVars() {
+    playerWidth = 0.0
+    playersSpace = 0.0
+    coverHeightPart = 0.0
+    coverWidthPart = 0.0
+    coverBottomSpacePart = 0.0
+    numberOnBottom = false
+    
+    chrome.storage.local.get(["playerWidth", "playersSpace", "coverHeightPart", "coverWidthPart", "coverBottomSpacePart", "numberOnBottom"], function(items){
+        
+        playerWidth = items["playerWidth"] ?? 9.1
+        playersSpace = items["playersSpace"] ?? 0.95
+        coverHeightPart = items["coverHeightPart"] ?? 0.15
+        coverWidthPart = items["coverWidthPart"] ?? 0.8
+        coverBottomSpacePart = items["coverBottomSpacePart"] ?? 0.005
+        numberOnBottom = items["numberOnBottom"] ?? false
+        
+        updateCoverSize()
+        buildSettingsDiv()
+    });
+}
+
+function buildSettingsDiv() {
+    var prevSettings = document.getElementById('mafia-settings')
+    if(prevSettings != null) {
+        container.removeChild(prevSettings)
     }
-    updateCoverSize()
+    
+    settingsDiv = document.createElement('div')
+    settingsDiv.id = "mafia-settings";
+    settingsDiv.className = "mafia_settings_container";
+    container.appendChild(settingsDiv)
+    
+    let closeBtn = document.createElement('img')
+    closeBtn.src = chrome.runtime.getURL("images/close.png");
+    closeBtn.className = "mafia_settings_close";
+    closeBtn.addEventListener('click', function() {
+        settingsDiv.style.visibility = "hidden";
+    });
+    settingsDiv.appendChild(closeBtn)
+    
+    buildSettingDiv(settingsDiv, "width", "mafia_setting_width", 1.0, coverWidthPart * 100.0, v => coverWidthPart = v / 100.0)
+    buildSettingDiv(settingsDiv, "height", "mafia_setting_height", 1.0, coverHeightPart * 100.0, v => coverHeightPart = v / 100.0)
+    buildSettingDiv(settingsDiv, "bottom margin", "mafia_setting_bot", 0.5, coverBottomSpacePart * 100.0, v => coverBottomSpacePart = v / 100.0)
+    buildSettingDiv(settingsDiv, "number width", "mafia_setting_pl_width", 0.1, playerWidth, v => playerWidth = v)
+    buildSettingDiv(settingsDiv, "number margin", "mafia_setting_pl_space", 0.01, playersSpace, v => playersSpace = v)
+    buildSettingBotAndTopDiv(settingsDiv)
+}
+
+function buildSettingDiv(parent, settingName, settingId, step, initValue, update) {
+    setDiv = document.createElement('div')
+    setDiv.id = settingId
+    setDiv.style.margin = "2px"
+    parent.appendChild(setDiv)
+    
+    let nameSpan = document.createElement("span")
+    nameSpan.className = "mafia_settings_title"
+    nameSpan.innerHTML = settingName
+    
+    let minusSpan = document.createElement("span")
+    minusSpan.className = "mafia_settings_sign"
+    minusSpan.innerHTML = "-"
+    minusSpan.id = settingName + "-minus"
+    
+    let input = document.createElement("input")
+    input.className = "mafia_settings_input"
+    input.value = initValue
+    
+    let plusSpan = document.createElement("span")
+    plusSpan.className = "mafia_settings_sign"
+    plusSpan.innerHTML = "+"
+    plusSpan.id = settingName + "-plus"
+    
+    setDiv.appendChild(nameSpan)
+    setDiv.appendChild(minusSpan)
+    setDiv.appendChild(input)
+    setDiv.appendChild(plusSpan)
+    
+    let updateOnUiAndSave = value => {
+        update(value)
+        input.value = value.toFixed(2)
+        updateCoverSize()
+        saveCoverSizeVars()
+    }
+    
+    minusSpan.addEventListener('click', function() {
+        let value = parseFloat(input.value) - step
+        updateOnUiAndSave(value)
+    });
+    
+    
+    plusSpan.addEventListener('click', function() {
+        let value = parseFloat(input.value) + step
+        updateOnUiAndSave(value)
+    });
+}
+
+function buildSettingBotAndTopDiv(parent) {
+    setDiv = document.createElement('div')
+    setDiv.id = "mafia_settings_num_pos"
+    setDiv.style.margin = "2px"
+    parent.appendChild(setDiv)
+    
+    let nameSpan = document.createElement("span")
+    nameSpan.className = "mafia_settings_title"
+    nameSpan.innerHTML = "numbers pos"
+    
+    let topSpan = document.createElement("span")
+    topSpan.className = "mafia_settings_small_btn"
+    topSpan.innerHTML = "Top"
+    topSpan.id = "mafia_settings_top_bot-top"
+    
+    let botSpan = document.createElement("span")
+    botSpan.className = "mafia_settings_small_btn"
+    botSpan.innerHTML = "Bot"
+    botSpan.id = "mafia_settings_top_bot-bot"
+    
+    setDiv.appendChild(nameSpan)
+    setDiv.appendChild(topSpan)
+    setDiv.appendChild(botSpan)
+    
+    let updateOnUiAndSave = value => {
+        numberOnBottom = value
+        updateCoverSize()
+        saveCoverSizeVars()
+    }
+    
+    topSpan.addEventListener('click', function() {
+        updateOnUiAndSave(false)
+    });
+    
+    botSpan.addEventListener('click', function() {
+        updateOnUiAndSave(true)
+    });
+}
+
+function saveCoverSizeVars() {
+    chrome.storage.local.set({
+        "playerWidth": playerWidth,
+        "playersSpace": playersSpace,
+        "coverHeightPart": coverHeightPart,
+        "coverWidthPart": coverWidthPart,
+        "coverBottomSpacePart": coverBottomSpacePart,
+        "numberOnBottom": numberOnBottom }, function(){
+            //  Data saved
+        });
 }

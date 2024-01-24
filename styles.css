@@ -1,0 +1,79 @@
+.style-imafia-num {
+    color: white;
+    position:absolute;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 500;
+}
+.mafia_settings_container {
+    background: black;
+    position: absolute;
+    right: 0px; top: 0px;
+    padding: 10px 30px 10px 10px;
+    border-radius: 6px;
+    margin: 10px;
+    z-index: 58;
+    visibility: hidden;
+}
+.mafia_settings_title {
+    width: 140px;
+    height: 20px;
+    font-size: 18px;
+    display: inline-flex;
+    line-height: 1.0;
+    align-items: center;
+    color: white;
+}
+.mafia_settings_sign {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    background: #f2f2f2;
+    border-radius: 4px;
+    padding: 5px;
+    line-height: 1.0;
+    border: 1px solid #ddd;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    font-size: 20px;
+    color: black;
+}
+.mafia_settings_small_btn {
+    cursor: pointer;
+    width: 40px;
+    height: 20px;
+    background: #f2f2f2;
+    margin: 3px;
+    border-radius: 4px;
+    padding: 5px;
+    line-height: 1.0;
+    border: 1px solid #ddd;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    font-size: 20px;
+    color: black;
+}
+.mafia_settings_input {
+    height: 30px;
+    width: 50px;
+    text-align: center;
+    font-size: 20px;
+    border: 1px solid #ddd;
+    line-height: 1.0;
+    margin: 5px;
+    border-radius:4px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.mafia_settings_close {
+    width: 20px;
+    height: 20px;
+    right: 0px;
+    top: 0px;
+    position: absolute;
+    cursor: pointer;
+    padding: 4px;
+}
+

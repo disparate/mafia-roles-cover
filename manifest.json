@@ -1,6 +1,6 @@
 {
   "name": "Mafia roles cover",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "manifest_version": 3,
   "description": "Cover roles for mafia games videos on Youtube. Features: hides roles, blurs the video during nights.",
   "homepage_url": "https://t.me/Andrei_Kazaravets",
@@ -9,11 +9,15 @@
     "type": "module"
   },
   "action": {
-    "default_icon": "logo.png",
+    "default_icon": "images/logo.png",
     "default_title": "Hide roles"
   },
-  "permissions": ["activeTab","scripting"],
+  "permissions": ["activeTab", "scripting", "storage"],
   "icons": {
-      "64": "logo.png"
-  }
+      "64": "images/logo.png"
+  },
+  "web_accessible_resources": [{
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+  }]
 }
