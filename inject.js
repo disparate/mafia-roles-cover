@@ -4,8 +4,19 @@ if (window.mafiaCoverScriptInjected !== true) {
     var VIDEO_RATIO = 1.7793
     
     var imafiaCover
-    var video = document.getElementsByClassName("html5-main-video")[0]
-    var container = document.querySelector('.html5-video-player')
+    var video = document.getElementsByTagName('video')[0]
+    youtubeContainer = document.querySelector('.html5-video-player')
+    var isTwitch = false
+    
+    if(youtubeContainer != null) {
+        var coverZIndex = "58"
+        var container = youtubeContainer
+    } else {
+        var coverZIndex = ""
+        isTwitch = true
+        var container = video.parentElement
+    }
+    var enableVideoBlur = true
     var isVideoPlaying = video => video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2;
     initVideoAnalyser()
     
@@ -15,9 +26,10 @@ if (window.mafiaCoverScriptInjected !== true) {
 
 if(window.mafiaCoverScriptEnabled !== true) {
     window.mafiaCoverScriptEnabled = true
+    var settingsDiv
     
-    buildCoverDiv()
     buildSettingsDiv()
+    buildCoverDiv()
     updateCoverSize()
     
     var videoAnalyser = window.videoSilenceAnalyser;
@@ -30,7 +42,7 @@ if(window.mafiaCoverScriptEnabled !== true) {
         container.removeChild(prevCover)
     }
     
-    var prevSettings = document.getElementById('mafia-settings')
+    prevSettings = document.getElementById('mafia-settings')
     if(prevSettings != null) {
         container.removeChild(prevSettings)
     }
@@ -41,31 +53,29 @@ function buildCoverDiv() {
     
     imafiaCover = document.createElement('div')
     imafiaCover.id = "imafia-cover"
-    imafiaCover.setAttribute("style", `background: ${coverBgColor}; border-radius: 6px; position: absolute; z-index: 58`)
+    imafiaCover.setAttribute("style", `background: ${coverBgColor}; border-radius: 6px; position: absolute; z-index: ${coverZIndex}`)
     
     var prevCover = document.getElementById('imafia-cover')
     if(prevCover != null) {
         container.removeChild(prevCover)
     }
-    container.appendChild(imafiaCover)
+    container.insertBefore(imafiaCover, container.children[1])
     
     const resizeObserver = new ResizeObserver(updateCoverSize)
     resizeObserver.observe(container)
     
     let settingsImg = document.createElement('img')
     settingsImg.id = "imafia-cover-settings-btn"
+    settingsImg.className = "mafia_cover_settings_icon"
     settingsImg.src = chrome.runtime.getURL("images/settings.png");
-    settingsImg.style.right = "-4px";
-    settingsImg.style.top = "-4px";
-    settingsImg.style.position = "absolute";
-    settingsImg.style.cursor = "pointer";
-    settingsImg.style.width = "12px";
-    settingsImg.style.height = "12px";
-    settingsImg.style.padding = "10px";
     imafiaCover.appendChild(settingsImg)
 
     settingsImg.addEventListener('click', function() {
-        document.getElementById("mafia-settings").style.visibility = "visible";
+        if(settingsDiv.style.visibility == "visible") {
+            settingsDiv.style.visibility = "hidden";
+        } else {
+            settingsDiv.style.visibility = "visible";
+        }
     });
 }
 
@@ -89,7 +99,7 @@ function updateCoverSize() {
     imafiaCover.style.left = `${Math.round(coverLeft)}px`
     
     document.querySelectorAll(".style-imafia-num").forEach(el => el.remove());
-    initialSpace = (100.0 - playerWidth*10 - playersSpace*9)/2
+    initialSpace = (100.0 - playerWidth*10 - playersSpace*9) / 2
     
     for (let i = 1; i <= 10; i++) {
         playerNumDiv = document.createElement('div')
@@ -110,67 +120,6 @@ function updateCoverSize() {
     }
 }
 
-
-function initVideoAnalyser() {
-    window.context = new AudioContext();
-    analyser = context.createAnalyser();
-    analyser.smoothingTimeConstant = 0.9;
-    analyser.fftSize = 512;
-    var source = context.createMediaElementSource(video);
-    source.connect(analyser);
-    analyser.connect(context.destination);
-    window.videoSilenceAnalyser = analyser
-}
-
-var SILENCE_CHECK_PERIOD = 200
-var SILENCE_TILL_BLUR = 5000
-var silenceCountTillHide = 1
-var silenceCounter = 0
-var prevVideoTime = 0
-
-function checkIfSilent() {
-    if(window.mafiaCoverScriptEnabled !== true) {
-        video.style.webkitFilter = ""
-        return
-    }
-    
-    if(!isVideoPlaying(video)) {
-        setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
-        video.style.webkitFilter = "blur(30px)"
-        return
-    }
-    
-    var array = new Uint8Array(videoAnalyser.fftSize);
-    videoAnalyser.getByteTimeDomainData(array);
-    
-    var average = 0.0;
-    for (i = 0; i < array.length; i++) {
-        a = Math.abs(array[i] - 128);
-        average += a;
-    }
-    average /= array.length;
-    
-    if(Math.abs(video.currentTime - prevVideoTime) > SILENCE_CHECK_PERIOD * 2) {
-        silenceCountTillHide = 1
-    }
-    prevVideoTime = video.currentTime
-    
-    if(average < 0.1) {
-        silenceCounter++
-    } else {
-        silenceCountTillHide = SILENCE_TILL_BLUR / SILENCE_CHECK_PERIOD
-        video.style.webkitFilter = ""
-        silenceCounter = 0
-    }
-    
-    if(silenceCounter == silenceCountTillHide) {
-        video.style.webkitFilter = "blur(50px)"
-    }
-    
-    setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
-}
-
-
 function initCoverVars() {
     playerWidth = 0.0
     playersSpace = 0.0
@@ -187,6 +136,7 @@ function initCoverVars() {
         coverWidthPart = items["coverWidthPart"] ?? 0.8
         coverBottomSpacePart = items["coverBottomSpacePart"] ?? 0.005
         numberOnBottom = items["numberOnBottom"] ?? false
+        enableVideoBlur = items["enableVideoBlur"] ?? true
         
         updateCoverSize()
         buildSettingsDiv()
@@ -194,7 +144,7 @@ function initCoverVars() {
 }
 
 function buildSettingsDiv() {
-    var prevSettings = document.getElementById('mafia-settings')
+    prevSettings = document.getElementById('mafia-settings')
     if(prevSettings != null) {
         container.removeChild(prevSettings)
     }
@@ -218,6 +168,7 @@ function buildSettingsDiv() {
     buildSettingDiv(settingsDiv, "number width", "mafia_setting_pl_width", 0.1, playerWidth, v => playerWidth = v)
     buildSettingDiv(settingsDiv, "number margin", "mafia_setting_pl_space", 0.01, playersSpace, v => playersSpace = v)
     buildSettingBotAndTopDiv(settingsDiv)
+    buildSettingEnableVideoBlur(settingsDiv)
 }
 
 function buildSettingDiv(parent, settingName, settingId, step, initValue, update) {
@@ -260,7 +211,6 @@ function buildSettingDiv(parent, settingName, settingId, step, initValue, update
         let value = parseFloat(input.value) - step
         updateOnUiAndSave(value)
     });
-    
     
     plusSpan.addEventListener('click', function() {
         let value = parseFloat(input.value) + step
@@ -307,6 +257,36 @@ function buildSettingBotAndTopDiv(parent) {
     });
 }
 
+
+function buildSettingEnableVideoBlur(parent) {
+    setDiv = document.createElement('div')
+    setDiv.id = "mafia_settings_video_blur"
+    setDiv.style.margin = "2px"
+    parent.appendChild(setDiv)
+    
+    let nameSpan = document.createElement("span")
+    nameSpan.className = "mafia_settings_title"
+    nameSpan.innerHTML = "Blur video"
+    
+    var input = document.createElement("INPUT");
+    input.setAttribute("type", "checkbox");
+    input.id = "mafia_settings_video_blur_checkbox"
+    input.className = "mafia_settings_checkbox"
+    input.checked = enableVideoBlur
+    
+    setDiv.appendChild(nameSpan)
+    setDiv.appendChild(input)
+    
+    let updateOnUiAndSave = value => {
+        enableVideoBlur = value
+        saveCoverSizeVars()
+    }
+    
+    input.addEventListener('click', function() {
+        updateOnUiAndSave(input.checked)
+    });
+}
+
 function saveCoverSizeVars() {
     chrome.storage.local.set({
         "playerWidth": playerWidth,
@@ -314,7 +294,80 @@ function saveCoverSizeVars() {
         "coverHeightPart": coverHeightPart,
         "coverWidthPart": coverWidthPart,
         "coverBottomSpacePart": coverBottomSpacePart,
-        "numberOnBottom": numberOnBottom }, function(){
-            //  Data saved
-        });
+        "numberOnBottom": numberOnBottom,
+        "enableVideoBlur": enableVideoBlur
+    }, function(){
+        //  Data saved
+    });
+}
+
+
+function initVideoAnalyser() {
+    window.context = new AudioContext();
+    analyser = context.createAnalyser();
+    analyser.smoothingTimeConstant = 0.9;
+    analyser.fftSize = 512;
+    var source = context.createMediaElementSource(video);
+    source.connect(analyser);
+    analyser.connect(context.destination);
+    window.videoSilenceAnalyser = analyser
+}
+
+var SILENCE_CHECK_PERIOD = 200
+var SILENCE_TILL_BLUR = 3000
+var silenceCountTillHide = 1
+var silenceCounter = 0
+var prevVideoTime = 0
+
+function checkIfSilent() {
+    if(enableVideoBlur == false) {
+        silenceCounter = 0
+        setTimeout(checkIfSilent, 1000)
+        video.style.webkitFilter = ""
+        return
+    }
+    
+    if(window.mafiaCoverScriptEnabled !== true) {
+        silenceCounter = 0
+        video.style.webkitFilter = ""
+        return
+    }
+    
+    if(!isVideoPlaying(video)) {
+        silenceCounter = 0
+        setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
+        video.style.webkitFilter = "blur(30px)"
+        return
+    }
+    
+    var array = new Uint8Array(videoAnalyser.fftSize);
+    videoAnalyser.getByteTimeDomainData(array);
+    
+    var average = 0.0;
+    for (i = 0; i < array.length; i++) {
+        a = Math.abs(array[i] - 128);
+        average += a;
+    }
+    average /= array.length;
+    
+    if(Math.abs(video.currentTime - prevVideoTime) > SILENCE_CHECK_PERIOD * 2) {
+        silenceCountTillHide = 1
+    }
+    prevVideoTime = video.currentTime
+    
+    if(average < 0.1) {
+        silenceCounter++
+    } else {
+        silenceCountTillHide = SILENCE_TILL_BLUR / SILENCE_CHECK_PERIOD
+        video.style.webkitFilter = ""
+        silenceCounter = 0
+    }
+    
+    console.log("Silence check", `average: ${average}, counter ${silenceCounter}, date ${Date.now()}`)
+    
+    if(silenceCounter > silenceCountTillHide) {
+        video.style.webkitFilter = "blur(50px)"
+    }
+    
+    setTimeout(checkIfSilent, SILENCE_CHECK_PERIOD)
 }
